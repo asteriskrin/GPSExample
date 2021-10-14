@@ -3,18 +3,36 @@
     android:layout_width="match_parent"
     android:layout_height="match_parent">
 
-    <TextView
-        android:layout_width="wrap_content"
+    <EditText
+        android:layout_width="120dp"
         android:layout_height="wrap_content"
-        android:text="@string/latitude"
-        android:id="@+id/tvLat" />
+        android:id="@+id/etLat" />
 
-    <TextView
+    <EditText
+        android:layout_width="120dp"
+        android:layout_height="wrap_content"
+        android:id="@+id/etLong"
+        android:layout_toEndOf="@id/etLat" />
+
+    <EditText
+        android:layout_width="120dp"
+        android:layout_height="wrap_content"
+        android:id="@+id/etZoom"
+        android:layout_below="@id/etLat" />
+
+    <Button
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:text="@string/longitude"
-        android:id="@+id/tvLong"
-        android:layout_toEndOf="@id/tvLat"
-        android:layout_marginStart="24dp"/>
+        android:text="Go"
+        android:id="@+id/btnGo"
+        android:layout_toEndOf="@id/etZoom"
+        android:layout_below="@id/etLat" />
+
+    <fragment
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:layout_below="@id/btnGo"
+        android:id="@+id/fragMap"
+        android:name="com.example.gpsexample.MapsFragment" />
 
 </RelativeLayout>

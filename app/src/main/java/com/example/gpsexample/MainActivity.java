@@ -1,11 +1,16 @@
 package com.example.gpsexample;
 
 import android.Manifest;
+import android.annotation.SuppressLint;
 import android.content.Context;
 import android.content.pm.PackageManager;
 import android.location.LocationListener;
 import android.location.LocationManager;
 import android.os.Bundle;
+import android.view.View;
+import android.view.inputmethod.InputMethodManager;
+import android.widget.Button;
+import android.widget.EditText;
 import android.widget.Toast;
 
 import androidx.annotation.NonNull;
@@ -18,10 +23,24 @@ public class MainActivity extends AppCompatActivity {
     private LocationManager myLocationManager;
     private LocationListener myLocationListener;
 
+    private MapsFragment fragMap;
+
+    private EditText etLat, etLong, etZoom;
+    private Button btnGo;
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
+
+        fragMap = (MapsFragment) getSupportFragmentManager().findFragmentById(R.id.fragMap);
+
+        etLat = findViewById(R.id.etLat);
+        etLong = findViewById(R.id.etLong);
+        etZoom = findViewById(R.id.etZoom);
+
+        btnGo = findViewById(R.id.btnGo);
+        btnGo.setOnClickListener(op);
 
         myLocationManager = (LocationManager) getSystemService(Context.LOCATION_SERVICE);
         myLocationListener = new lokasiListener(this);
@@ -56,5 +75,29 @@ public class MainActivity extends AppCompatActivity {
             }
         }
         super.onRequestPermissionsResult(requestCode, permissions, grantResults);
+    }
+
+    @SuppressLint("NonConstantResourceId")
+    View.OnClickListener op = view -> {
+        switch (view.getId()) {
+            case R.id.btnGo:
+                hideKeyboard(view);
+                goToLokasi();
+                break;
+        }
+    };
+
+    private void hideKeyboard(View v) {
+        InputMethodManager imm = (InputMethodManager) getSystemService(INPUT_METHOD_SERVICE);
+        imm.hideSoftInputFromWindow(v.getWindowToken(), 0);
+    }
+
+    private void goToLokasi() {
+        Double lat = Double.parseDouble(etLat.getText().toString());
+        Double lng = Double.parseDouble(etLong.getText().toString());
+        float zoom = Float.parseFloat(etZoom.getText().toString());
+
+        Toast.makeText(this, "Move to Lat: " + lat + " Long: " + lng, Toast.LENGTH_LONG).show();
+        fragMap.gotoPeta(lat, lng, zoom);
     }
 }
