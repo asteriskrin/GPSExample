@@ -11,6 +11,7 @@ import android.view.ViewGroup;
 
 import com.google.android.gms.maps.CameraUpdateFactory;
 import com.google.android.gms.maps.GoogleMap;
+import com.google.android.gms.maps.GoogleMapOptions;
 import com.google.android.gms.maps.OnMapReadyCallback;
 import com.google.android.gms.maps.SupportMapFragment;
 import com.google.android.gms.maps.model.LatLng;
@@ -62,5 +63,9 @@ public class MapsFragment extends Fragment {
         LatLng lokasiBaru = new LatLng(lat, lng);
         mMap.addMarker(new MarkerOptions().position(lokasiBaru).title("Market in " + lat + ":" + lng));
         mMap.moveCamera(CameraUpdateFactory.newLatLngZoom(lokasiBaru, z));
+    }
+
+    public void setMapType(int type) {
+        mMap.setMapType(type);
     }
 }

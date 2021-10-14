@@ -7,6 +7,8 @@ import android.content.pm.PackageManager;
 import android.location.LocationListener;
 import android.location.LocationManager;
 import android.os.Bundle;
+import android.view.Menu;
+import android.view.MenuItem;
 import android.view.View;
 import android.view.inputmethod.InputMethodManager;
 import android.widget.Button;
@@ -16,6 +18,8 @@ import android.widget.Toast;
 import androidx.annotation.NonNull;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.core.app.ActivityCompat;
+
+import com.google.android.gms.maps.GoogleMap;
 
 public class MainActivity extends AppCompatActivity {
     public static final int MY_PERMISSIONS_REQUEST_LOCATION = 10;
@@ -99,5 +103,24 @@ public class MainActivity extends AppCompatActivity {
 
         Toast.makeText(this, "Move to Lat: " + lat + " Long: " + lng, Toast.LENGTH_LONG).show();
         fragMap.gotoPeta(lat, lng, zoom);
+    }
+
+    @Override
+    public boolean onCreateOptionsMenu(Menu menu) {
+        getMenuInflater().inflate(R.menu.menu, menu);
+        return super.onCreateOptionsMenu(menu);
+    }
+
+    @SuppressLint("NonConstantResourceId")
+    @Override
+    public boolean onOptionsItemSelected(@NonNull MenuItem item) {
+        switch (item.getItemId()) {
+            case R.id.iNormal: fragMap.setMapType(GoogleMap.MAP_TYPE_NORMAL); break;
+            case R.id.iTerrain: fragMap.setMapType(GoogleMap.MAP_TYPE_TERRAIN); break;
+            case R.id.iSatelite: fragMap.setMapType(GoogleMap.MAP_TYPE_SATELLITE); break;
+            case R.id.iHybrid: fragMap.setMapType(GoogleMap.MAP_TYPE_HYBRID); break;
+            case R.id.iNone: fragMap.setMapType(GoogleMap.MAP_TYPE_NONE); break;
+        }
+        return super.onOptionsItemSelected(item);
     }
 }

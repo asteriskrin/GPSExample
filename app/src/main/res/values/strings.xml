@@ -2,4 +2,9 @@
     <string name="app_name">GPS Example</string>
     <string name="latitude">Latitude</string>
     <string name="longitude">Longitude</string>
+    <string name="normal">Normal</string>
+    <string name="hybrid">Hybrid</string>
+    <string name="terrain">Terrain</string>
+    <string name="satelite">Satelite</string>
+    <string name="none">None</string>
 </resources>
