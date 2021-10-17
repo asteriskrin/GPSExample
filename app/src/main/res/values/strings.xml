@@ -7,4 +7,9 @@
     <string name="terrain">Terrain</string>
     <string name="satelite">Satelite</string>
     <string name="none">None</string>
+    <string name="stop_update">Stop Update</string>
+    <string name="lat_0_0">lat: 0.0</string>
+    <string name="long_0_0">long: 0.0</string>
+    <string name="update_0_0">update: 0.0</string>
+    <string name="start_update">Start Update</string>
 </resources>

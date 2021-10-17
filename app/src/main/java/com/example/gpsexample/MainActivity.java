@@ -2,35 +2,59 @@ package com.example.gpsexample;
 
 import android.Manifest;
 import android.annotation.SuppressLint;
-import android.content.Context;
 import android.content.pm.PackageManager;
-import android.location.LocationListener;
-import android.location.LocationManager;
+import android.location.Location;
 import android.os.Bundle;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
-import android.view.inputmethod.InputMethodManager;
 import android.widget.Button;
-import android.widget.EditText;
+import android.widget.TextView;
 import android.widget.Toast;
 
 import androidx.annotation.NonNull;
+import androidx.annotation.Nullable;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.core.app.ActivityCompat;
 
+import com.google.android.gms.common.ConnectionResult;
+import com.google.android.gms.common.api.GoogleApiClient;
+import com.google.android.gms.location.LocationListener;
+import com.google.android.gms.location.LocationRequest;
+import com.google.android.gms.location.LocationServices;
 import com.google.android.gms.maps.GoogleMap;
 
-public class MainActivity extends AppCompatActivity {
-    public static final int MY_PERMISSIONS_REQUEST_LOCATION = 10;
+import java.text.DateFormat;
+import java.util.Date;
 
-    private LocationManager myLocationManager;
-    private LocationListener myLocationListener;
+public class MainActivity extends AppCompatActivity implements GoogleApiClient.ConnectionCallbacks,
+        GoogleApiClient.OnConnectionFailedListener, LocationListener {
+    public static final int PERMISSION_GET_LAST_LOCATION = 10;
+    public static final int PERMISSION_REQUEST_LOCATION_UPDATES = 11;
+
+    public static final long UPDATE_INTERVAL_IN_MILLISECONDS = 10000;
+    public static final long FASTEST_UPDATE_INTERVAL_IN_MILLISECONDS = UPDATE_INTERVAL_IN_MILLISECONDS / 2;
+
+    // Keys for storing activity state in the Bundle.
+    private final static String KEY_REQUESTING_LOCATION_UPDATES = "requesting-location-updates";
+    private final static String KEY_LOCATION = "location";
+    private final static String KEY_LAST_UPDATED_TIME_STRING = "last-updated-time-string";
 
     private MapsFragment fragMap;
 
-    private EditText etLat, etLong, etZoom;
-    private Button btnGo;
+    private Button btnStartUpdate, btnStopUpdate;
+
+    private GoogleApiClient mGoogleApiClient;
+    private LocationRequest mLocationRequest;
+
+    private Location mCurrentLocation;
+    private Boolean mRequestingLocationUpdates;
+    private String mLastUpdateTime = "";
+
+    private TextView tvLat, tvLong, tvUpdate;
+
+    public MainActivity() {
+    }
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -39,43 +63,42 @@ public class MainActivity extends AppCompatActivity {
 
         fragMap = (MapsFragment) getSupportFragmentManager().findFragmentById(R.id.fragMap);
 
-        etLat = findViewById(R.id.etLat);
-        etLong = findViewById(R.id.etLong);
-        etZoom = findViewById(R.id.etZoom);
+        tvLat = findViewById(R.id.tvLat);
+        tvLong = findViewById(R.id.tvLong);
+        tvUpdate = findViewById(R.id.tvUpdate);
 
-        btnGo = findViewById(R.id.btnGo);
-        btnGo.setOnClickListener(op);
+        btnStartUpdate = findViewById(R.id.btnStartUpdate);
+        btnStopUpdate = findViewById(R.id.btnStopUpdate);
+        btnStartUpdate.setOnClickListener(op);
+        btnStopUpdate.setOnClickListener(op);
 
-        myLocationManager = (LocationManager) getSystemService(Context.LOCATION_SERVICE);
-        myLocationListener = new lokasiListener(this);
-        if (ActivityCompat.checkSelfPermission(this, Manifest.permission.ACCESS_FINE_LOCATION) != PackageManager.PERMISSION_GRANTED &&
-                ActivityCompat.checkSelfPermission(this, Manifest.permission.ACCESS_COARSE_LOCATION) != PackageManager.PERMISSION_GRANTED) {
-            // TODO: Consider calling
-            //    ActivityCompat#requestPermissions
-            // here to request the missing permissions, and then overriding
-            //   public void onRequestPermissionsResult(int requestCode, String[] permissions,
-            //                                          int[] grantResults)
-            // to handle the case where the user grants the permission. See the documentation
-            // for ActivityCompat#requestPermissions for more details.
-            Toast.makeText(this, "No permission to access location, please allow it to use this app.",  Toast.LENGTH_LONG).show();
-            String[] permission = {
-                Manifest.permission.ACCESS_FINE_LOCATION,
-                Manifest.permission.ACCESS_COARSE_LOCATION
-            };
-            ActivityCompat.requestPermissions(this, permission, MY_PERMISSIONS_REQUEST_LOCATION);
-        }
+        mRequestingLocationUpdates = false;
+
+        updateValuesFromBundle(savedInstanceState);
+        buildGoogleApiClient();
+        mGoogleApiClient.connect();
     }
 
     @Override
     public void onRequestPermissionsResult(int requestCode, @NonNull String[] permissions, @NonNull int[] grantResults) {
-        if (requestCode == MY_PERMISSIONS_REQUEST_LOCATION) {
+        if (requestCode == PERMISSION_GET_LAST_LOCATION) {
             if (ActivityCompat.checkSelfPermission(this, Manifest.permission.ACCESS_FINE_LOCATION) != PackageManager.PERMISSION_GRANTED &&
                     ActivityCompat.checkSelfPermission(this, Manifest.permission.ACCESS_COARSE_LOCATION) != PackageManager.PERMISSION_GRANTED) {
                 Toast.makeText(this, "Permission is not granted, this app won't work.",  Toast.LENGTH_LONG).show();
             }
             else {
-                myLocationManager.requestLocationUpdates(LocationManager.GPS_PROVIDER, 1000, 25, myLocationListener);
-                Toast.makeText(this, "Permission is granted", Toast.LENGTH_LONG).show();
+                mCurrentLocation = LocationServices.FusedLocationApi.getLastLocation(mGoogleApiClient);
+                mLastUpdateTime = DateFormat.getTimeInstance().format(new Date());
+                updateUI();
+            }
+        }
+        else if (requestCode == PERMISSION_REQUEST_LOCATION_UPDATES) {
+            if (ActivityCompat.checkSelfPermission(this, Manifest.permission.ACCESS_FINE_LOCATION) != PackageManager.PERMISSION_GRANTED &&
+                    ActivityCompat.checkSelfPermission(this, Manifest.permission.ACCESS_COARSE_LOCATION) != PackageManager.PERMISSION_GRANTED) {
+                Toast.makeText(this, "Permission is not granted, this app won't work.",  Toast.LENGTH_LONG).show();
+            }
+            else {
+                LocationServices.FusedLocationApi.requestLocationUpdates(mGoogleApiClient, mLocationRequest, this);
             }
         }
         super.onRequestPermissionsResult(requestCode, permissions, grantResults);
@@ -84,26 +107,15 @@ public class MainActivity extends AppCompatActivity {
     @SuppressLint("NonConstantResourceId")
     View.OnClickListener op = view -> {
         switch (view.getId()) {
-            case R.id.btnGo:
-                hideKeyboard(view);
-                goToLokasi();
+            case R.id.btnStartUpdate:
+                mRequestingLocationUpdates = true;
+                startLocationUpdates();
+                break;
+            case R.id.btnStopUpdate:
+                mRequestingLocationUpdates = false;
                 break;
         }
     };
-
-    private void hideKeyboard(View v) {
-        InputMethodManager imm = (InputMethodManager) getSystemService(INPUT_METHOD_SERVICE);
-        imm.hideSoftInputFromWindow(v.getWindowToken(), 0);
-    }
-
-    private void goToLokasi() {
-        Double lat = Double.parseDouble(etLat.getText().toString());
-        Double lng = Double.parseDouble(etLong.getText().toString());
-        float zoom = Float.parseFloat(etZoom.getText().toString());
-
-        Toast.makeText(this, "Move to Lat: " + lat + " Long: " + lng, Toast.LENGTH_LONG).show();
-        fragMap.gotoPeta(lat, lng, zoom);
-    }
 
     @Override
     public boolean onCreateOptionsMenu(Menu menu) {
@@ -122,5 +134,101 @@ public class MainActivity extends AppCompatActivity {
             case R.id.iNone: fragMap.setMapType(GoogleMap.MAP_TYPE_NONE); break;
         }
         return super.onOptionsItemSelected(item);
+    }
+
+    @Override
+    public void onLocationChanged(@NonNull Location location) {
+        mCurrentLocation = location;
+        mLastUpdateTime = DateFormat.getTimeInstance().format(new Date());
+        updateUI();
+        Toast.makeText(this, "onLocationChanged", Toast.LENGTH_LONG).show();
+    }
+
+    @Override
+    public void onConnected(@Nullable Bundle bundle) {
+        Toast.makeText(this, "onConnected is called", Toast.LENGTH_LONG).show();
+        if (mCurrentLocation == null) {
+            String[] permission = {
+                Manifest.permission.ACCESS_FINE_LOCATION,
+                Manifest.permission.ACCESS_COARSE_LOCATION
+            };
+            ActivityCompat.requestPermissions(this, permission, PERMISSION_GET_LAST_LOCATION);
+        }
+
+        if (mRequestingLocationUpdates) {
+            startLocationUpdates();
+        }
+    }
+
+    @Override
+    public void onConnectionSuspended(int i) {
+        mGoogleApiClient.connect();
+    }
+
+    @Override
+    public void onConnectionFailed(@NonNull ConnectionResult connectionResult) {
+
+    }
+
+    /**
+     * Updates fields based on data stored in the bundle.
+     *
+     * @param savedInstanceState The activity state saved in the Bundle.
+     */
+    private void updateValuesFromBundle(Bundle savedInstanceState) {
+        if (savedInstanceState != null) {
+            // Update the value of mRequestingLocationUpdates from the Bundle, and make sure that
+            // the Start Updates and Stop Updates buttons are correctly enabled or disabled.
+            if (savedInstanceState.keySet().contains(KEY_REQUESTING_LOCATION_UPDATES)) {
+                mRequestingLocationUpdates = savedInstanceState.getBoolean(
+                        KEY_REQUESTING_LOCATION_UPDATES);
+            }
+
+            // Update the value of mCurrentLocation from the Bundle and update the UI to show the
+            // correct latitude and longitude.
+            if (savedInstanceState.keySet().contains(KEY_LOCATION)) {
+                // Since KEY_LOCATION was found in the Bundle, we can be sure that mCurrentLocation
+                // is not null.
+                mCurrentLocation = savedInstanceState.getParcelable(KEY_LOCATION);
+            }
+
+            // Update the value of mLastUpdateTime from the Bundle and update the UI.
+            if (savedInstanceState.keySet().contains(KEY_LAST_UPDATED_TIME_STRING)) {
+                mLastUpdateTime = savedInstanceState.getString(KEY_LAST_UPDATED_TIME_STRING);
+            }
+            updateUI();
+        }
+    }
+
+    private void startLocationUpdates() {
+        String[] permission = {
+                Manifest.permission.ACCESS_FINE_LOCATION,
+                Manifest.permission.ACCESS_COARSE_LOCATION
+        };
+        ActivityCompat.requestPermissions(this, permission, PERMISSION_REQUEST_LOCATION_UPDATES);
+    }
+
+    private void updateUI() {
+        tvLat.setText(String.format("lat: %f", mCurrentLocation.getLatitude()));
+        tvLong.setText(String.format("long: %f", mCurrentLocation.getLongitude()));
+        tvUpdate.setText(String.format("update: %s", mLastUpdateTime));
+
+        fragMap.setMyLoc(mCurrentLocation.getLatitude(), mCurrentLocation.getLongitude());
+    }
+
+    protected synchronized void buildGoogleApiClient() {
+        mGoogleApiClient = new GoogleApiClient.Builder(this)
+            .addConnectionCallbacks(this)
+            .addOnConnectionFailedListener(this)
+            .addApi(LocationServices.API)
+            .build();
+        createLocationRequest();
+    }
+
+    protected void createLocationRequest() {
+        mLocationRequest = new LocationRequest();
+        mLocationRequest.setInterval(UPDATE_INTERVAL_IN_MILLISECONDS);
+        mLocationRequest.setFastestInterval(FASTEST_UPDATE_INTERVAL_IN_MILLISECONDS);
+        mLocationRequest.setPriority(LocationRequest.PRIORITY_HIGH_ACCURACY);
     }
 }

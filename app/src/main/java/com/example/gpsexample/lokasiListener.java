@@ -20,11 +20,11 @@ public class lokasiListener implements LocationListener {
 
     @Override
     public void onLocationChanged(@NonNull Location location) {
-//        tvLat = ((Activity) context).findViewById(R.id.tvLat);
-//        tvLong = ((Activity) context).findViewById(R.id.tvLong);
-//
-//        tvLat.setText(String.valueOf(location.getLatitude()));
-//        tvLong.setText(String.valueOf(location.getLongitude()));
+        tvLat = ((Activity) context).findViewById(R.id.tvLat);
+        tvLong = ((Activity) context).findViewById(R.id.tvLong);
+
+        tvLat.setText(String.valueOf(location.getLatitude()));
+        tvLong.setText(String.valueOf(location.getLongitude()));
 
         Toast.makeText(context, "GPS Capture", Toast.LENGTH_LONG).show();
     }

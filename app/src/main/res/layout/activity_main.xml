@@ -3,36 +3,62 @@
     android:layout_width="match_parent"
     android:layout_height="match_parent">
 
-    <EditText
-        android:layout_width="120dp"
-        android:layout_height="wrap_content"
-        android:id="@+id/etLat" />
-
-    <EditText
-        android:layout_width="120dp"
-        android:layout_height="wrap_content"
-        android:id="@+id/etLong"
-        android:layout_toEndOf="@id/etLat" />
-
-    <EditText
-        android:layout_width="120dp"
-        android:layout_height="wrap_content"
-        android:id="@+id/etZoom"
-        android:layout_below="@id/etLat" />
-
-    <Button
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:text="Go"
-        android:id="@+id/btnGo"
-        android:layout_toEndOf="@id/etZoom"
-        android:layout_below="@id/etLat" />
-
     <fragment
         android:layout_width="match_parent"
-        android:layout_height="match_parent"
-        android:layout_below="@id/btnGo"
+        android:layout_height="500dp"
         android:id="@+id/fragMap"
         android:name="com.example.gpsexample.MapsFragment" />
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:baselineAligned="false"
+        android:orientation="horizontal"
+        android:layout_below="@id/fragMap"
+        android:id="@+id/llBtnAction">
+        <Button
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_marginEnd="10dp"
+            android:layout_weight="1"
+            android:text="@string/start_update"
+            android:id="@+id/btnStartUpdate" />
+        <Button
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_marginStart="10dp"
+            android:layout_weight="1"
+            android:text="@string/stop_update"
+            android:id="@+id/btnStopUpdate" />
+    </LinearLayout>
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_below="@id/llBtnAction"
+        >
+
+        <TextView
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_weight="1"
+            android:text="@string/lat_0_0"
+            android:id="@+id/tvLat" />
+
+        <TextView
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_weight="1"
+            android:text="@string/long_0_0"
+            android:id="@+id/tvLong" />
+
+        <TextView
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_weight="1"
+            android:text="@string/update_0_0"
+            android:id="@+id/tvUpdate" />
+
+    </LinearLayout>
 
 </RelativeLayout>

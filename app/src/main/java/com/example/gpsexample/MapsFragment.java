@@ -1,17 +1,16 @@
 package com.example.gpsexample;
 
-import androidx.annotation.NonNull;
-import androidx.annotation.Nullable;
-import androidx.fragment.app.Fragment;
-
 import android.os.Bundle;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 
+import androidx.annotation.NonNull;
+import androidx.annotation.Nullable;
+import androidx.fragment.app.Fragment;
+
 import com.google.android.gms.maps.CameraUpdateFactory;
 import com.google.android.gms.maps.GoogleMap;
-import com.google.android.gms.maps.GoogleMapOptions;
 import com.google.android.gms.maps.OnMapReadyCallback;
 import com.google.android.gms.maps.SupportMapFragment;
 import com.google.android.gms.maps.model.LatLng;
@@ -39,6 +38,8 @@ public class MapsFragment extends Fragment {
             googleMap.addMarker(new MarkerOptions().position(ITS).title("Marker in ITS"));
             googleMap.moveCamera(CameraUpdateFactory.newLatLngZoom(ITS, 8));
         }
+
+
     };
 
     @Nullable
@@ -59,13 +60,14 @@ public class MapsFragment extends Fragment {
         }
     }
 
-    public void gotoPeta(Double lat, Double lng, float z) {
-        LatLng lokasiBaru = new LatLng(lat, lng);
-        mMap.addMarker(new MarkerOptions().position(lokasiBaru).title("Market in " + lat + ":" + lng));
-        mMap.moveCamera(CameraUpdateFactory.newLatLngZoom(lokasiBaru, z));
-    }
-
     public void setMapType(int type) {
         mMap.setMapType(type);
+    }
+
+    public void setMyLoc(Double lat, Double lng) {
+        LatLng myLoc = new LatLng(lat, lng);
+        mMap.clear();
+        mMap.addMarker(new MarkerOptions().position(myLoc).title("Your Location"));
+        mMap.moveCamera(CameraUpdateFactory.newLatLngZoom(myLoc, 15));
     }
 }
